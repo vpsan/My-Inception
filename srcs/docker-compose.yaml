@@ -1,0 +1,60 @@
+version: '3.5'
+
+networks:
+  inception_project:
+    name: bhatches_net
+    driver: bridge
+    
+volumes:
+  my_wordpress:
+    driver: local
+    name: wordpress
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/bhatches/data/data_wordpress
+  my_database:
+    driver: local
+    name: database
+    driver_opts:
+      type: none
+      o: bind
+      device: /home/bhatches/data/data_database
+
+services:
+ mysql:
+  image: mariadb
+  env_file: users_env_ variables.env
+  volumes:
+   - my_database:/var/lib/mysql
+  restart: always
+  build: db/
+  networks:
+    - inception_project
+  container_name: mariadb
+ nginx:
+  image: nginx
+  volumes:
+   - my_wordpress:/var/www/html
+  depends_on:
+   - wp
+  ports:
+   - "443:443"
+  env_file: users_env_ variables.env
+  restart: always
+  build: nginx/
+  networks:
+    - inception_project
+  container_name: nginx
+ wp:
+  image: wordpress
+  env_file: users_env_ variables.env
+  depends_on:
+    - mysql
+  volumes:
+   - my_wordpress:/var/www/html
+  restart: always
+  build: wp/
+  networks:
+    - inception_project
+  container_name: wordpress
